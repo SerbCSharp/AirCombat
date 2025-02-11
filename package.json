@@ -1,0 +1,25 @@
+{
+  "name": "aircombat",
+  "version": "1.0.0",
+  "main": "script.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SerbCSharp/AirCombat.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SerbCSharp/AirCombat/issues"
+  },
+  "homepage": "https://github.com/SerbCSharp/AirCombat#readme",
+  "description": "",
+  "dependencies": {
+    "three": "^0.173.0",
+    "vite": "^6.1.0"
+  }
+}
