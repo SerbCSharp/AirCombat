@@ -38,11 +38,19 @@ plane.receiveShadow = true
 scene.add( plane );
 
 const cubeGeometry = new THREE.BoxGeometry(2, 1, 0.5);
-const cubeMaterial = new THREE.MeshStandardMaterial({ color: 'blue' });
-const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-cube.position.set(1, 1, 0.6);
-cube.castShadow = true
-scene.add(cube);
+const cubeMaterialBlue = new THREE.MeshStandardMaterial({ color: '#0000ff' });
+const cubeBlue = new THREE.Mesh(cubeGeometry, cubeMaterialBlue);
+cubeBlue.position.set(1, 1, 0.6);
+cubeBlue.castShadow = true
+scene.add(cubeBlue);
+
+const cubeMaterialRed = new THREE.MeshStandardMaterial({ color: '#ff0000' });
+const cubeRed = new THREE.Mesh(cubeGeometry, cubeMaterialRed);
+cubeRed.position.set(15, 7, 0.6);
+cubeRed.castShadow = true
+scene.add(cubeRed);
+
+const raycaster = new THREE.Raycaster();
 
 const renderer = new THREE.WebGLRenderer({ canvas: canvas })
 renderer.shadowMap.enabled = true
@@ -53,11 +61,24 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 const orbitControls = new OrbitControls(camera, canvas);
 orbitControls.enableDamping = true
 
+const mouse = new THREE.Vector2();
+window.addEventListener('mousemove', (event) =>
+{
+    mouse.x = event.clientX / window.innerWidth * 2 - 1
+    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1
+});
+
 const clock = new THREE.Clock();
 const tick = () => {
     const elapsedTime = clock.getElapsedTime();
 
-    cube.position.z = Math.sin(elapsedTime * 7) * 0.5 + 0.8
+    raycaster.setFromCamera(mouse, camera);
+    const aircraft = [cubeBlue, cubeRed];
+    const intersects = raycaster.intersectObjects(aircraft)
+    for(const intersect of intersects)
+    {
+        intersect.object.position.z = Math.sin(elapsedTime * 7) * 0.5 + 0.8
+    }
 
     orbitControls.update();
     renderer.render( scene, camera );
