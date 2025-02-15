@@ -63,7 +63,7 @@ orbitControls.enableDamping = true
 const raycaster = new THREE.Raycaster();
 const aircraft = [cubeBlue, cubeRed];
 let currentIntersect = null
-
+let spin = null
 const mouse = new THREE.Vector2();
 window.addEventListener('mousemove', (event) =>
     {
@@ -73,7 +73,12 @@ window.addEventListener('mousemove', (event) =>
 window.addEventListener('click', (event) =>
     {
         if(currentIntersect)
-            gsap.to(currentIntersect.object.position, {z: 1, repeat: -1})
+        {
+            spin = gsap.to(currentIntersect.object.position, {z: 1, repeat: -1, ease: "none", paused: true});
+            spin.timeScale(2).play();
+        }
+        else
+        spin.pause();
     })
 
 const clock = new THREE.Clock();
