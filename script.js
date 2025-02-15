@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import gsap from 'gsap'
 
 const canvas = document.querySelector('canvas.webgl')
 const scene = new THREE.Scene();
@@ -27,7 +28,7 @@ directionalLight.shadow.camera.top = 15;
 directionalLight.shadow.camera.right = 25;
 directionalLight.shadow.camera.bottom = - 15;
 directionalLight.shadow.camera.left = - 25;
-scene.add(directionalLight );
+scene.add(directionalLight);
 
 const planeGeometry = new THREE.PlaneGeometry(28.2,48.6);
 const planeMaterial = new THREE.MeshStandardMaterial( { map: texture } );
@@ -50,8 +51,6 @@ cubeRed.position.set(15, 7, 0.6);
 cubeRed.castShadow = true
 scene.add(cubeRed);
 
-const raycaster = new THREE.Raycaster();
-
 const renderer = new THREE.WebGLRenderer({ canvas: canvas })
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -61,24 +60,32 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 const orbitControls = new OrbitControls(camera, canvas);
 orbitControls.enableDamping = true
 
+const raycaster = new THREE.Raycaster();
+const aircraft = [cubeBlue, cubeRed];
+let currentIntersect = null
+
 const mouse = new THREE.Vector2();
 window.addEventListener('mousemove', (event) =>
-{
-    mouse.x = event.clientX / window.innerWidth * 2 - 1
-    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1
-});
+    {
+        mouse.x = event.clientX / window.innerWidth * 2 - 1
+        mouse.y = - (event.clientY / window.innerHeight) * 2 + 1
+    })
+window.addEventListener('click', (event) =>
+    {
+        if(currentIntersect)
+            gsap.to(currentIntersect.object.position, {z: 1, repeat: -1})
+    })
 
 const clock = new THREE.Clock();
 const tick = () => {
     const elapsedTime = clock.getElapsedTime();
 
     raycaster.setFromCamera(mouse, camera);
-    const aircraft = [cubeBlue, cubeRed];
     const intersects = raycaster.intersectObjects(aircraft)
-    for(const intersect of intersects)
-    {
-        intersect.object.position.z = Math.sin(elapsedTime * 7) * 0.5 + 0.8
-    }
+    if(intersects.length)   
+        currentIntersect = intersects[0] 
+    else
+        currentIntersect = null
 
     orbitControls.update();
     renderer.render( scene, camera );
