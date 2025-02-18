@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import gsap from 'gsap'
+
+const rgbeLoader = new RGBELoader();
 
 const canvas = document.querySelector('canvas.webgl')
 const scene = new THREE.Scene();
@@ -29,6 +32,13 @@ directionalLight.shadow.camera.right = 25;
 directionalLight.shadow.camera.bottom = - 15;
 directionalLight.shadow.camera.left = - 25;
 scene.add(directionalLight);
+
+rgbeLoader.load('/textures/industrial_sunset_puresky_4k.hdr', (environmentMap) =>
+    {
+        environmentMap.mapping = THREE.EquirectangularReflectionMapping
+        //scene.environment = environmentMap
+        scene.background = environmentMap
+    })
 
 const planeGeometry = new THREE.PlaneGeometry(28.2,48.6);
 const planeMaterial = new THREE.MeshStandardMaterial( { map: texture } );
