@@ -1,9 +1,5 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
-import gsap from 'gsap'
-
-const rgbeLoader = new RGBELoader();
 
 const canvas = document.querySelector('canvas.webgl')
 const scene = new THREE.Scene();
@@ -32,13 +28,6 @@ directionalLight.shadow.camera.right = 25;
 directionalLight.shadow.camera.bottom = - 15;
 directionalLight.shadow.camera.left = - 25;
 scene.add(directionalLight);
-
-rgbeLoader.load('/textures/industrial_sunset_puresky_4k.hdr', (environmentMap) =>
-    {
-        environmentMap.mapping = THREE.EquirectangularReflectionMapping
-        //scene.environment = environmentMap
-        scene.background = environmentMap
-    })
 
 const planeGeometry = new THREE.PlaneGeometry(28.2,48.6);
 const planeMaterial = new THREE.MeshStandardMaterial( { map: texture } );
@@ -73,22 +62,11 @@ orbitControls.enableDamping = true
 const raycaster = new THREE.Raycaster();
 const aircraft = [cubeBlue, cubeRed];
 let currentIntersect = null
-let spin = null
 const mouse = new THREE.Vector2();
 window.addEventListener('mousemove', (event) =>
     {
         mouse.x = event.clientX / window.innerWidth * 2 - 1
         mouse.y = - (event.clientY / window.innerHeight) * 2 + 1
-    })
-window.addEventListener('click', (event) =>
-    {
-        if(currentIntersect)
-        {
-            spin = gsap.to(currentIntersect.object.position, {z: 1, repeat: -1, ease: "none", paused: true});
-            spin.timeScale(2).play();
-        }
-        else
-        spin.pause();
     })
 
 const clock = new THREE.Clock();
