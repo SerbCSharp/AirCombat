@@ -8,11 +8,10 @@ import {
 
 export default function App() {
   const planeTexture = useTexture("./textures/plane.jpg");
-  const [controlsEnabled, setControlsEnabled] = useState(true);
 
   return (
     <>
-      <OrbitControls enabled={controlsEnabled} />
+      <OrbitControls makeDefault />
 
       <Sky sunPosition={[1, 2, 3]} />
 
@@ -23,11 +22,7 @@ export default function App() {
         <planeGeometry args={[28.2, 48.6]} />
         <meshStandardMaterial map={planeTexture} />
       </mesh>
-      <DragControls
-        onDragStart={() => setControlsEnabled(false)}
-        onDragEnd={() => setControlsEnabled(true)}
-        axisLock="z"
-      >
+      <DragControls axisLock="z">
         <mesh position-z={0.7}>
           <boxGeometry />
           <meshStandardMaterial color={"red"} />
