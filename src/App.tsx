@@ -22,10 +22,17 @@ export default function App() {
         <planeGeometry args={[28.2, 48.6]} />
         <meshStandardMaterial map={planeTexture} />
       </mesh>
+
       <DragControls axisLock="z">
         <mesh position-z={0.7}>
           <boxGeometry />
           <meshStandardMaterial color={"red"} />
+        </mesh>
+      </DragControls>
+      <DragControls axisLock="z">
+        <mesh position={[2, 0, 0.7]}>
+          <boxGeometry />
+          <meshStandardMaterial color={"blue"} />
         </mesh>
       </DragControls>
     </>
