@@ -16,6 +16,10 @@ export default function Warplanes() {
   const selectedIdRef = useRef(null);
   const lightRefs = useRef([]); // Рефы для источников света
 
+  // Храним актуальные целевые координаты [x, y, z] для каждого куба в рефе,
+  // чтобы менять их без ререндера компонента
+  const targetsRef = useRef(fighters.map((f) => [...f.position]));
+
   const { fighterGeometry, materials } = useMemo(() => {
     return {
       fighterGeometry: new THREE.BoxGeometry(1, 1, 1),
@@ -39,6 +43,28 @@ export default function Warplanes() {
     selectedIdRef.current = selectedIdRef.current === id ? null : id;
   };
 
+  // 2. Второй клик по поверхности (выбор точки назначения)
+  const handlePlaneClick = (e) => {
+    // Если ни один куб не выбран, ничего не делаем
+    if (selectedIdRef.current === null) return;
+
+    e.stopPropagation();
+
+    // Находим индекс выбранного куба
+    const selectedIndex = fighters.findIndex(
+      (f) => f.id === selectedIdRef.current,
+    );
+
+    if (selectedIndex !== -1) {
+      // e.point содержит точные мировые координаты клика по плоскости
+      targetsRef.current[selectedIndex][0] = e.point.x;
+      targetsRef.current[selectedIndex][1] = e.point.y;
+
+      // Снимаем выделение, чтобы куб начал посадку в новой точке
+      selectedIdRef.current = null;
+    }
+  };
+
   // Анимация подъема и опускания каждый кадр
   useFrame((state, delta) => {
     fighters.forEach((item, i) => {
@@ -47,12 +73,36 @@ export default function Warplanes() {
       if (!mesh) return;
 
       const isSelected = selectedIdRef.current === item.id;
+      const [targetX, targetY, baseZ] = targetsRef.current[i];
 
-      // Если кубик выбран — поднимаем на 3 единицы по Z, иначе возвращаем на место
-      const baseZ = item.position[2];
-      const targetZ = selectedIdRef.current === item.id ? baseZ + 3 : baseZ;
+      // Если выбран — держим высоту baseZ + 3, иначе сажаем на baseZ
+      const targetZ = isSelected ? baseZ + 3 : baseZ;
 
-      // Вычисляем позицию только если меш еще не достиг цели
+      // Плавное перемещение по X
+      if (Math.abs(mesh.position.x - targetX) > 0.001) {
+        mesh.position.x = THREE.MathUtils.damp(
+          mesh.position.x,
+          targetX,
+          6,
+          delta,
+        );
+      } else {
+        mesh.position.x = targetX;
+      }
+
+      // Плавное перемещение по Y
+      if (Math.abs(mesh.position.y - targetY) > 0.001) {
+        mesh.position.y = THREE.MathUtils.damp(
+          mesh.position.y,
+          targetY,
+          6,
+          delta,
+        );
+      } else {
+        mesh.position.y = targetY;
+      }
+
+      // Плавный подъем и посадка по Z
       if (Math.abs(mesh.position.z - targetZ) > 0.001) {
         // damp безопаснее lerp при скачках FPS
         mesh.position.z = THREE.MathUtils.damp(
@@ -84,6 +134,13 @@ export default function Warplanes() {
 
   return (
     <group>
+      {/* Невидимая плоскость для перехвата второго клика в плоскости XY.
+          Если у вас уже есть меш земли/карты, перенесите onClick на него. */}
+      <mesh position={[0, 0, 0]} onClick={handlePlaneClick}>
+        <planeGeometry args={[200, 200]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+
       {fighters.map((item, i) => (
         <mesh
           key={item.id}
