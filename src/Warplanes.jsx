@@ -14,7 +14,8 @@ let fighters = [
 export default function Warplanes() {
   const meshRefs = useRef([]);
   const selectedIdRef = useRef(null);
-  const lightRefs = useRef([]); // Рефы для источников света
+  const singleLightRef = useRef(null); // Один источник света на всю сцену
+  const lastSelectedIdxRef = useRef(-1); // Индекс куба, над которым висит свет
 
   // Храним актуальные целевые координаты [x, y, z] для каждого куба в рефе,
   // чтобы менять их без ререндера компонента
@@ -39,8 +40,13 @@ export default function Warplanes() {
 
   const handleCubeClick = (e, id) => {
     e.stopPropagation();
-    // Обновляем значение напрямую без перерисовки React
-    selectedIdRef.current = selectedIdRef.current === id ? null : id;
+    const isDeselecting = selectedIdRef.current === id;
+    selectedIdRef.current = isDeselecting ? null : id;
+
+    if (!isDeselecting) {
+      // Запоминаем индекс куба, который только что выбрали
+      lastSelectedIdxRef.current = fighters.findIndex((f) => f.id === id);
+    }
   };
 
   // 2. Второй клик по поверхности (выбор точки назначения)
@@ -69,7 +75,6 @@ export default function Warplanes() {
   useFrame((state, delta) => {
     fighters.forEach((item, i) => {
       const mesh = meshRefs.current[i];
-      const light = lightRefs.current[i];
       if (!mesh) return;
 
       const isSelected = selectedIdRef.current === item.id;
@@ -78,67 +83,64 @@ export default function Warplanes() {
       // Если выбран — держим высоту baseZ + 3, иначе сажаем на baseZ
       const targetZ = isSelected ? baseZ + 3 : baseZ;
 
-      // Плавное перемещение по X
-      if (Math.abs(mesh.position.x - targetX) > 0.001) {
-        mesh.position.x = THREE.MathUtils.damp(
-          mesh.position.x,
-          targetX,
-          6,
-          delta,
-        );
-      } else {
-        mesh.position.x = targetX;
-      }
-
-      // Плавное перемещение по Y
-      if (Math.abs(mesh.position.y - targetY) > 0.001) {
-        mesh.position.y = THREE.MathUtils.damp(
-          mesh.position.y,
-          targetY,
-          6,
-          delta,
-        );
-      } else {
-        mesh.position.y = targetY;
-      }
-
-      // Плавный подъем и посадка по Z
-      if (Math.abs(mesh.position.z - targetZ) > 0.001) {
-        // damp безопаснее lerp при скачках FPS
-        mesh.position.z = THREE.MathUtils.damp(
-          mesh.position.z,
-          targetZ,
-          8,
-          delta,
-        );
-      } else {
-        mesh.position.z = targetZ;
-      }
-
-      // Плавное включение и выключение света при взлете/посадке
-      if (light) {
-        const targetIntensity = isSelected ? 15 : 0; // 15 — яркость при взлете
-        if (Math.abs(light.intensity - targetIntensity) > 0.01) {
-          light.intensity = THREE.MathUtils.damp(
-            light.intensity,
-            targetIntensity,
-            8,
-            delta,
-          );
-        } else {
-          light.intensity = targetIntensity;
-        }
-      }
+      mesh.position.x = THREE.MathUtils.damp(
+        mesh.position.x,
+        targetX,
+        6,
+        delta,
+      );
+      mesh.position.y = THREE.MathUtils.damp(
+        mesh.position.y,
+        targetY,
+        6,
+        delta,
+      );
+      mesh.position.z = THREE.MathUtils.damp(
+        mesh.position.z,
+        targetZ,
+        8,
+        delta,
+      );
     });
+    // Управляем единственным источником света
+    const light = singleLightRef.current;
+    const activeIdx = lastSelectedIdxRef.current;
+    if (light && activeIdx !== -1) {
+      const activeMesh = meshRefs.current[activeIdx];
+      if (activeMesh) {
+        // Свет всегда следует за последним выбранным кубом (даже во время его посадки)
+        light.position.set(
+          activeMesh.position.x,
+          activeMesh.position.y,
+          activeMesh.position.z - 0.55,
+        );
+      }
+
+      // Если куб всё ещё выбран — светим на 15, если уже садится — плавно гасим до 0
+      const targetIntensity = selectedIdRef.current !== null ? 15 : 0;
+      light.intensity = THREE.MathUtils.damp(
+        light.intensity,
+        targetIntensity,
+        8,
+        delta,
+      );
+    }
   });
 
   return (
     <group>
-      {/* Невидимая плоскость для перехвата второго клика в плоскости XY.
-          Если у вас уже есть меш земли/карты, перенесите onClick на него. */}
-      <mesh position={[0, 0, 0]} onClick={handlePlaneClick}>
-        <planeGeometry args={[200, 200]} />
-        <meshBasicMaterial transparent opacity={0} />
+      {/* Всего один pointLight на весь компонент */}
+      <pointLight
+        ref={singleLightRef}
+        color="#ffaa00"
+        intensity={0}
+        distance={6}
+        decay={2}
+      />
+
+      <mesh position={[0, 0, 0.05]} onClick={handlePlaneClick}>
+        <planeGeometry args={[75, 45]} />
+        <meshStandardMaterial color={"gray"} transparent opacity={0.5} />
       </mesh>
 
       {fighters.map((item, i) => (
@@ -149,22 +151,9 @@ export default function Warplanes() {
           geometry={fighterGeometry}
           material={materials[item.color]}
           onClick={(e) => handleCubeClick(e, item.id)}
-          // Меняем курсор при наведении для удобства
           onPointerOver={() => (document.body.style.cursor = "pointer")}
           onPointerOut={() => (document.body.style.cursor = "auto")}
-        >
-          {/* Источник света привязан к центру меша. 
-              Высота куба = 1, значит низ находится на -0.5 по Z.
-              Ставим -0.55, чтобы свет не перекрывался геометрией самого куба. */}
-          <pointLight
-            ref={(el) => (lightRefs.current[i] = el)}
-            position={[0, 0, -0.55]}
-            color="#ffaa00"
-            intensity={0}
-            distance={6}
-            decay={2}
-          />
-        </mesh>
+        />
       ))}
     </group>
   );
