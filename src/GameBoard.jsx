@@ -5,7 +5,7 @@ export default function GameBoard() {
     <>
       <Grid
         rotation-x={0.5 * Math.PI}
-        args={[75, 45]}
+        args={[76, 45]}
         cellSize={1} // Размер маленькой клетки = 1
         cellThickness={1} // Толщина линий маленькой клетки
         cellColor="grey" // Цвет линий
@@ -14,14 +14,22 @@ export default function GameBoard() {
         sectionColor="black" // Цвет линий секции
         side={2}
       />
-
       <mesh position={[31.5, 15, 0.1]} rotation-z={-0.5 * Math.PI}>
         <planeGeometry args={[9, 6]} />
-        <meshStandardMaterial
-          color={"red"}
-          transparent // Обязательно включаем режим прозрачности
-          opacity={0.5}
-        />
+        <meshStandardMaterial color={"#e63946"} transparent opacity={0.5} />
+      </mesh>
+      <mesh position={[32.75, -13.5, 0.1]} rotation-z={-0.5 * Math.PI}>
+        <planeGeometry args={[12, 8.5]} />
+        <meshStandardMaterial color={"#e63946"} transparent opacity={0.5} />
+      </mesh>
+
+      <mesh position={[-31.5, -15, 0.1]} rotation-z={-0.5 * Math.PI}>
+        <planeGeometry args={[9, 6]} />
+        <meshStandardMaterial color={"#3a86ff"} transparent opacity={0.5} />
+      </mesh>
+      <mesh position={[-32.75, 13.5, 0.1]} rotation-z={-0.5 * Math.PI}>
+        <planeGeometry args={[12, 8.5]} />
+        <meshStandardMaterial color={"#3a86ff"} transparent opacity={0.5} />
       </mesh>
     </>
   );
