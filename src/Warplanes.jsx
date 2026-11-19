@@ -4,49 +4,51 @@ import * as THREE from "three";
 
 const PLANE_Z = 0.05;
 
+const redSpecs = [
+  // Крупные (scale: 1.5)
+  ...[
+    [30, 18],
+    [30, 15],
+    [30, 12],
+    [33, 18],
+    [33, 15],
+    [33, 12],
+  ].map((p) => ({ p, scale: 1.5 })),
+  // Малые (scale: 1)
+  ...[
+    [33, -9],
+    [30, -12],
+    [30, -15],
+    [30, -18],
+    [33, -12],
+    [33, -15],
+    [33, -18],
+    [36, -12],
+    [36, -15],
+    [36, -18],
+  ].map((p) => ({ p, scale: 1 })),
+];
+
 const aircraft = [
-  { id: 1, position: [30, 18, 0.7], color: "red", scale: 1.5 },
-  { id: 2, position: [30, 15, 0.7], color: "red", scale: 1.5 },
-  { id: 3, position: [30, 12, 0.7], color: "red", scale: 1.5 },
-  { id: 4, position: [33, 18, 0.7], color: "red", scale: 1.5 },
-  { id: 5, position: [33, 15, 0.7], color: "red", scale: 1.5 },
-  { id: 6, position: [33, 12, 0.7], color: "red", scale: 1.5 },
-  { id: 7, position: [33, -9, 0.7], color: "red", scale: 1 },
-  { id: 8, position: [30, -12, 0.7], color: "red", scale: 1 },
-  { id: 9, position: [30, -15, 0.7], color: "red", scale: 1 },
-  { id: 10, position: [30, -18, 0.7], color: "red", scale: 1 },
-  { id: 11, position: [33, -12, 0.7], color: "red", scale: 1 },
-  { id: 12, position: [33, -15, 0.7], color: "red", scale: 1 },
-  { id: 13, position: [33, -18, 0.7], color: "red", scale: 1 },
-  { id: 14, position: [36, -12, 0.7], color: "red", scale: 1 },
-  { id: 15, position: [36, -15, 0.7], color: "red", scale: 1 },
-  { id: 16, position: [36, -18, 0.7], color: "red", scale: 1 },
-  { id: 17, position: [-30, -18, 0.7], color: "blue", scale: 1.5 },
-  { id: 18, position: [-30, -15, 0.7], color: "blue", scale: 1.5 },
-  { id: 19, position: [-30, -12, 0.7], color: "blue", scale: 1.5 },
-  { id: 20, position: [-33, -18, 0.7], color: "blue", scale: 1.5 },
-  { id: 21, position: [-33, -15, 0.7], color: "blue", scale: 1.5 },
-  { id: 22, position: [-33, -12, 0.7], color: "blue", scale: 1.5 },
-  { id: 23, position: [-33, 9, 0.7], color: "blue", scale: 1 },
-  { id: 24, position: [-30, 12, 0.7], color: "blue", scale: 1 },
-  { id: 25, position: [-30, 15, 0.7], color: "blue", scale: 1 },
-  { id: 26, position: [-30, 18, 0.7], color: "blue", scale: 1 },
-  { id: 27, position: [-33, 12, 0.7], color: "blue", scale: 1 },
-  { id: 28, position: [-33, 15, 0.7], color: "blue", scale: 1 },
-  { id: 29, position: [-33, 18, 0.7], color: "blue", scale: 1 },
-  { id: 30, position: [-36, 12, 0.7], color: "blue", scale: 1 },
-  { id: 31, position: [-36, 15, 0.7], color: "blue", scale: 1 },
-  { id: 32, position: [-36, 18, 0.7], color: "blue", scale: 1 },
+  ...redSpecs.map(({ p: [x, y], scale }, i) => ({
+    id: i + 1,
+    position: [x, y, PLANE_Z + scale * 0.5],
+    color: "red",
+    scale,
+  })),
+  ...redSpecs.map(({ p: [x, y], scale }, i) => ({
+    id: i + 17,
+    position: [-x, -y, PLANE_Z + scale * 0.5], // Зеркалим красных
+    color: "blue",
+    scale,
+  })),
 ];
 
 export default function Warplanes() {
   const meshRefs = useRef([]);
   const selectedIdRef = useRef(null);
-  const singleLightRef = useRef(null); // Один источник света на всю сцену
-  const lastSelectedIdxRef = useRef(-1); // Индекс куба, над которым висит свет
+  const lastSelectedIdxRef = useRef(-1);
 
-  // Храним актуальные целевые координаты [x, y, z] для каждого куба в рефе,
-  // чтобы менять их без ререндера компонента
   const targetsRef = useRef(aircraft.map((f) => [...f.position]));
 
   const { fighterGeometry, materials } = useMemo(() => {
@@ -80,11 +82,9 @@ export default function Warplanes() {
 
   // 2. Второй клик по поверхности (выбор точки назначения)
   const handlePlaneClick = (e) => {
-    // Если ни один куб не выбран, ничего не делаем
     if (selectedIdRef.current === null) return;
     e.stopPropagation();
 
-    // Находим индекс выбранного куба
     const selectedIndex = lastSelectedIdxRef.current;
 
     if (selectedIndex !== -1) {
@@ -96,7 +96,6 @@ export default function Warplanes() {
     }
   };
 
-  // Анимация подъема и опускания каждый кадр
   useFrame((state, delta) => {
     aircraft.forEach((item, i) => {
       const mesh = meshRefs.current[i];
@@ -104,22 +103,23 @@ export default function Warplanes() {
       if (!mesh) return;
 
       const isSelected = selectedIdRef.current === item.id;
-      // 1. Берем конечные цели из рефа
       const [finalTargetX, finalTargetY] = targetsRef.current[i];
 
       const groundedZ = PLANE_Z + item.scale * 0.5;
-      // Самолет остается в воздухе, пока выбран ИЛИ пока не долетел до конца обоих катетов
       const isArrived =
         Math.abs(finalTargetX - mesh.position.x) <= 0.2 &&
         Math.abs(finalTargetY - mesh.position.y) <= 0.2;
 
+      if (
+        !isSelected &&
+        isArrived &&
+        Math.abs(mesh.position.z - groundedZ) < 0.001
+      ) {
+        return;
+      }
+
       const targetZ = isSelected || !isArrived ? groundedZ + 3 : groundedZ;
 
-      // 2. Определяем, летим ли мы еще по оси X (порог точности 0.2 единицы)
-      // Порог переключения (радиус скругления угла)
-      // 0.05 — резкий прямой угол с почти полной остановкой
-      // 0.8  — мягкий, плавный поворот без потери скорости
-      // 2.0  — очень широкая дуга
       const turnRadius = 0.8;
       const isMovingX = Math.abs(finalTargetX - mesh.position.x) > turnRadius;
 
@@ -169,42 +169,10 @@ export default function Warplanes() {
         delta,
       );
     });
-    // Управляем единственным источником света
-    const light = singleLightRef.current;
-    const activeIdx = lastSelectedIdxRef.current;
-    if (light && activeIdx !== -1) {
-      const activeMesh = meshRefs.current[activeIdx];
-      if (activeMesh) {
-        // Свет всегда следует за последним выбранным кубом (даже во время его посадки)
-        light.position.set(
-          activeMesh.position.x,
-          activeMesh.position.y,
-          activeMesh.position.z - (aircraft[activeIdx].scale * 0.5 + 0.1),
-        );
-      }
-
-      // Если куб всё ещё выбран — светим на 15, если уже садится — плавно гасим до 0
-      const targetIntensity = selectedIdRef.current !== null ? 15 : 0;
-      light.intensity = THREE.MathUtils.damp(
-        light.intensity,
-        targetIntensity,
-        8,
-        delta,
-      );
-    }
   });
 
   return (
     <group>
-      {/* Всего один pointLight на весь компонент */}
-      <pointLight
-        ref={singleLightRef}
-        color="#ffffff"
-        intensity={0}
-        distance={6}
-        decay={2}
-      />
-
       <mesh position={[0, 0, 0.05]} onClick={handlePlaneClick}>
         <planeGeometry args={[76, 45]} />
         <meshStandardMaterial color={"gray"} transparent opacity={0.5} />
