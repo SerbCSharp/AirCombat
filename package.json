@@ -8,15 +8,9 @@
     "build": "vite build"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^6.1.2",
-    "esbuild": "^0.28.2",
     "vite": "^8.3.5"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.9",
-    "@react-three/fiber": "^9.8.2",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1",
     "three": "^0.187.0"
   }
 }
