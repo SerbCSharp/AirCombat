@@ -1,20 +1,37 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 export class AircraftMesh {
-  build(units) {
-    const group = new THREE.Group();
+  constructor() {
+    this.group = new THREE.Group();
+    this.meshes = new Map();
 
+    // Создаем общие геометрии и материалы один раз
+    this.geometries = {
+      FIGHTER: new THREE.ConeGeometry(0.45, 1.3, 4).rotateX(Math.PI / 2),
+      BOMBER: new THREE.ConeGeometry(0.6, 1.5, 4).rotateX(Math.PI / 2),
+    };
+
+    this.materials = {
+      RED: new THREE.MeshStandardMaterial({ color: 0xff4d4d }),
+      BLUE: new THREE.MeshStandardMaterial({ color: 0x4da6ff }),
+    };
+  }
+
+  build(units) {
     units.forEach((u) => {
-      const isFighter = u.type === 'FIGHTER';
       const mesh = new THREE.Mesh(
-        isFighter ? new THREE.ConeGeometry(0.45, 1.3, 4) : new THREE.BoxGeometry(1, 0.45, 1.2),
-        new THREE.MeshStandardMaterial({ color: u.team === 'RED' ? 0xff4d4d : 0x4da6ff })
+        this.geometries[u.type],
+        this.materials[u.team]
       );
-      if (isFighter) mesh.rotation.x = u.team === 'RED' ? Math.PI / 2 : -Math.PI / 2;
-      mesh.position.set(u.x, 0.45, u.z);
-      group.add(mesh);
+
+      mesh.rotation.y = u.rotationY;
+      mesh.position.set(u.x, 0.7, u.z);
+      mesh.userData = { type: "AIRCRAFT", id: u.id };
+
+      this.meshes.set(u.id, mesh);
+      this.group.add(mesh);
     });
 
-    return group;
+    return this.group;
   }
 }

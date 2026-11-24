@@ -19,7 +19,6 @@ export class Scene {
     this.renderer.setSize(innerWidth, innerHeight);
     document.body.appendChild(this.renderer.domElement);
 
-    // instantiate the controls
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
 

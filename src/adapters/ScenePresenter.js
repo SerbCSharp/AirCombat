@@ -5,15 +5,24 @@ export class ScenePresenter {
 
   toWorld(x, y, w, h) {
     return {
-      x: (x - (w - 1) / 2) * this.step,
-      z: (y - (h - 1) / 2) * this.step,
+      x: (x - (w - 2) / 2) * this.step,
+      z: (y - h / 2) * this.step,
     };
   }
 
   present({ board, aircrafts }) {
     return {
-      cells: board.grid.flat().map((c) => ({ ...c, ...this.toWorld(c.x, c.y, board.width, board.height) })),
-      units: aircrafts.map((u) => ({ ...u, ...this.toWorld(u.position.x, u.position.y, board.width, board.height) })),
+      // Передаем данные доски и вычисленные мировые размеры
+      board: {
+        width: board.width,
+        height: board.height,
+        step: this.step,
+      },
+      units: aircrafts.map((u) => ({
+        ...u,
+        ...this.toWorld(u.position.x, u.position.y, board.width, board.height),
+        rotationY: Math.atan2(u.direction.dx, u.direction.dy),
+      })),
     };
   }
 }

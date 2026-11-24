@@ -1,26 +1,26 @@
-import { Board } from '../domain/entities/Board.js';
-import { Airfield } from '../domain/entities/Airfield.js';
-import { Aircraft } from '../domain/entities/Aircraft.js';
+import { Board } from "../domain/entities/Board.js";
+import { Aircraft } from "../domain/entities/Aircraft.js";
 
 export class InitGame {
   build() {
     const board = new Board(13, 23);
 
-    const redCells = [...this._rect(1, 3, 1, 2), ...this._rect(7, 11, 1, 2)];
-    const blueCells = [...this._rect(1, 3, 20, 21), ...this._rect(7, 11, 20, 21)];
-
-    redCells.forEach(({ x, y }) => board.setAirfieldCell(x, y, 'RED'));
-    blueCells.forEach(({ x, y }) => board.setAirfieldCell(x, y, 'BLUE'));
+    const redCells = [
+      ...this._rect(0, 2, 1, 2),
+      ...this._rect(9, 11, 1, 3),
+      { x: 8, y: 2 },
+    ];
+    const blueCells = [
+      ...this._rect(9, 11, 21, 22),
+      ...this._rect(0, 2, 20, 22),
+      { x: 3, y: 21 },
+    ];
 
     return {
       board,
-      airfields: [
-        new Airfield({ team: 'RED', cells: redCells }),
-        new Airfield({ team: 'BLUE', cells: blueCells }),
-      ],
       aircrafts: [
-        ...this._spawn('RED', redCells),
-        ...this._spawn('BLUE', blueCells),
+        ...this._spawn("RED", redCells),
+        ...this._spawn("BLUE", blueCells),
       ],
     };
   }
@@ -33,8 +33,21 @@ export class InitGame {
   }
 
   _spawn(team, cells) {
-    const p = team === 'RED' ? 'r' : 'b';
-    const types = [...Array(6).fill('BOMBER'), ...Array(10).fill('FIGHTER')];
-    return cells.map((c, i) => new Aircraft({ id: `${p}${i + 1}`, type: types[i], team, x: c.x, y: c.y }));
+    const p = team === "RED" ? "r" : "b";
+    const types = [...Array(6).fill("BOMBER"), ...Array(10).fill("FIGHTER")];
+    // Красные смотрят вниз по сетке (+Y), синие — вверх (-Y)
+    const initialDirection =
+      team === "RED" ? { dx: 0, dy: 1 } : { dx: 0, dy: -1 };
+    return cells.map(
+      (c, i) =>
+        new Aircraft({
+          id: `${p}${i + 1}`,
+          type: types[i],
+          team,
+          x: c.x,
+          y: c.y,
+          direction: { ...initialDirection },
+        }),
+    );
   }
 }
