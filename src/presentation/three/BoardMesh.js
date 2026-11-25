@@ -7,24 +7,38 @@ export class BoardMesh {
     this.planeTexture = textureLoader.load("./plane.jpg");
     this.planeTexture.colorSpace = THREE.SRGBColorSpace;
     this.planeTexture.anisotropy = 8;
+    this.ground = null;
   }
 
   build({ width, height, step }) {
+    if (this.ground) return this.group;
+
     const worldWidth = width * step;
     const worldHeight = height * step;
 
-    const ground = new THREE.Mesh(
+    this.ground = new THREE.Mesh(
       new THREE.PlaneGeometry(worldWidth, worldHeight),
       new THREE.MeshStandardMaterial({
         map: this.planeTexture,
         roughness: 0.8,
       }),
     );
-    ground.receiveShadow = true;
-    ground.rotation.x = -Math.PI / 2;
-    ground.scale.set(1, 1.01, 1);
-    this.group.add(ground);
+    this.ground.receiveShadow = true;
+    this.ground.rotation.x = -Math.PI / 2;
+    this.ground.scale.set(1, 1.01, 1);
+    this.ground.userData = { type: "BOARD" };
+    this.group.add(this.ground);
 
     return this.group;
+  }
+
+  dispose() {
+    if (this.ground) {
+      this.ground.geometry.dispose();
+      this.ground.material.dispose();
+      this.group.remove(this.ground);
+      this.ground = null;
+    }
+    this.planeTexture.dispose();
   }
 }

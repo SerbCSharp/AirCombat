@@ -3,4 +3,8 @@ export class Board {
     this.width = width;
     this.height = height;
   }
+
+  isInside(x, y) {
+    return x >= 0 && x < this.width && y >= 0 && y < this.height;
+  }
 }
