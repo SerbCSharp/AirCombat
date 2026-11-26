@@ -4,45 +4,58 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 export class Scene {
   constructor() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color("#98e5fe");
+    this.scene.background = new THREE.Color("#262b33");
     this.animationFrameId = null;
 
     this.camera = new THREE.PerspectiveCamera(
-      45,
+      42,
       innerWidth / innerHeight,
       0.1,
-      1000,
+      500,
     );
-    this.camera.position.set(0.1, 35, 0);
-    this.camera.lookAt(0, 0, 0);
+    this.camera.position.set(7, 41, 0);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.05;
     document.body.appendChild(this.renderer.domElement);
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
-    this.controls.maxPolarAngle = Math.PI / 2.2;
-    this.controls.minDistance = 12;
+    this.controls.dampingFactor = 0.07;
+    this.controls.screenSpacePanning = false;
+    this.controls.maxPolarAngle = Math.PI / 2.35;
+    this.controls.minDistance = 14;
     this.controls.maxDistance = 65;
+    this.controls.target.set(0, 0, 0);
 
-    const light = new THREE.DirectionalLight("#FFFFFF", 1.5);
-    light.position.set(15, 40, 15);
-    light.castShadow = true;
-
-    const d = 30;
-    light.shadow.camera.left = -d;
-    light.shadow.camera.right = d;
-    light.shadow.camera.top = d;
-    light.shadow.camera.bottom = -d;
-    light.shadow.camera.near = 1;
-    light.shadow.camera.far = 100;
-    light.shadow.mapSize.set(2048, 2048);
-
-    this.scene.add(new THREE.AmbientLight("#FFFFFF", 0.5), light);
+    this._setupLights();
     window.addEventListener("resize", this._onResize);
+  }
+
+  _setupLights() {
+    const hemiLight = new THREE.HemisphereLight(0xfff8ee, 0x3b4252, 0.75);
+    this.scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xfff5e4, 1.8);
+    dirLight.position.set(18, 36, 20);
+    dirLight.castShadow = true;
+
+    const frustum = 32;
+    dirLight.shadow.camera.left = -frustum;
+    dirLight.shadow.camera.right = frustum;
+    dirLight.shadow.camera.top = frustum;
+    dirLight.shadow.camera.bottom = -frustum;
+    dirLight.shadow.camera.near = 5;
+    dirLight.shadow.camera.far = 90;
+    dirLight.shadow.mapSize.set(2048, 2048);
+    dirLight.shadow.bias = -0.0005;
+
+    this.scene.add(dirLight);
   }
 
   _onResize = () => {
@@ -55,14 +68,22 @@ export class Scene {
     this.scene.add(obj);
   }
 
-  runAnimation() {
-    const loop = () => {
+  runAnimation(onTick) {
+    let lastTime = performance.now();
+
+    const loop = (now) => {
       this.animationFrameId = requestAnimationFrame(loop);
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      onTick?.(dt);
       this.controls.update();
       this.renderer.render(this.scene, this.camera);
     };
-    loop();
+
+    this.animationFrameId = requestAnimationFrame(loop);
   }
+
 
   dispose() {
     if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);

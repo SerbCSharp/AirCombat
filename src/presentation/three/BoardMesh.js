@@ -13,11 +13,8 @@ export class BoardMesh {
   build({ width, height, step }) {
     if (this.ground) return this.group;
 
-    const worldWidth = width * step;
-    const worldHeight = height * step;
-
     this.ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(worldWidth, worldHeight),
+      new THREE.PlaneGeometry(width * step, height * step),
       new THREE.MeshStandardMaterial({
         map: this.planeTexture,
         roughness: 0.8,
@@ -26,7 +23,6 @@ export class BoardMesh {
     this.ground.receiveShadow = true;
     this.ground.rotation.x = -Math.PI / 2;
     this.ground.scale.set(1, 1.01, 1);
-    this.ground.userData = { type: "BOARD" };
     this.group.add(this.ground);
 
     return this.group;
@@ -42,3 +38,4 @@ export class BoardMesh {
     this.planeTexture.dispose();
   }
 }
+

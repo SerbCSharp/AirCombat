@@ -11,71 +11,63 @@ export class AircraftMesh {
     };
 
     this.materials = {
-      RED_ACTIVE: new THREE.MeshPhysicalMaterial({
+      RED: new THREE.MeshPhysicalMaterial({
         color: 0xff4d4d,
         roughness: 0.25,
       }),
-      RED_DONE: new THREE.MeshPhysicalMaterial({
-        color: 0xff4d4d,
-        roughness: 0.25,
-        transparent: true,
-        opacity: 0.55,
-      }),
-      BLUE_ACTIVE: new THREE.MeshPhysicalMaterial({
+      BLUE: new THREE.MeshPhysicalMaterial({
         color: 0x4da6ff,
         roughness: 0.25,
-      }),
-      BLUE_DONE: new THREE.MeshPhysicalMaterial({
-        color: 0x4da6ff,
-        roughness: 0.25,
-        transparent: true,
-        opacity: 0.55,
-      }),
-      SELECTED: new THREE.MeshPhysicalMaterial({
-        color: 0xffeb3b,
-        roughness: 0.2,
       }),
     };
   }
 
   sync(units) {
-    const activeIds = new Set(units.map((u) => u.id));
-
-    for (const [id, mesh] of this.meshes.entries()) {
-      if (!activeIds.has(id)) mesh.visible = false;
-    }
-
     units.forEach((u) => {
       let mesh = this.meshes.get(u.id);
       if (!mesh) {
         mesh = this._createUnitMesh(u);
+        mesh.position.set(u.worldPos.x, u.worldPos.y, u.worldPos.z);
+        mesh.rotation.y = u.rotationY;
         this.meshes.set(u.id, mesh);
         this.group.add(mesh);
       }
 
-      mesh.visible = true;
-      mesh.position.set(u.worldPos.x, u.worldPos.y, u.worldPos.z);
-      mesh.rotation.y = u.rotationY;
-
-      const matKey = u.isSelected
-        ? "SELECTED"
-        : `${u.team}_${u.canAct ? "ACTIVE" : "DONE"}`;
-
-      if (mesh.material !== this.materials[matKey]) {
-        mesh.material = this.materials[matKey];
-      }
+      mesh.userData.targetPos = { ...u.worldPos };
+      mesh.userData.targetRotY = u.rotationY;
     });
 
     return this.group;
   }
 
+  update(dt) {
+    const speed = 10;
+    const alpha = 1 - Math.exp(-speed * dt);
+
+    for (const mesh of this.meshes.values()) {
+      const { targetPos, targetRotY } = mesh.userData;
+      if (!targetPos) continue;
+
+      mesh.position.x = THREE.MathUtils.lerp(mesh.position.x, targetPos.x, alpha);
+      mesh.position.y = THREE.MathUtils.lerp(mesh.position.y, targetPos.y, alpha);
+      mesh.position.z = THREE.MathUtils.lerp(mesh.position.z, targetPos.z, alpha);
+
+      // Кратчайший угол разворота (без кручения через 360°)
+      const deltaAngle = Math.atan2(
+        Math.sin(targetRotY - mesh.rotation.y),
+        Math.cos(targetRotY - mesh.rotation.y),
+      );
+      mesh.rotation.y += deltaAngle * alpha;
+    }
+  }
+
   _createUnitMesh(u) {
     const mesh = new THREE.Mesh(
       this.geometries[u.type],
-      this.materials[`${u.team}_ACTIVE`],
+      this.materials[u.team],
     );
     mesh.castShadow = true;
-    mesh.userData = { type: "AIRCRAFT", id: u.id };
+    mesh.userData.id = u.id;
     return mesh;
   }
 
@@ -85,3 +77,4 @@ export class AircraftMesh {
     this.meshes.clear();
   }
 }
+

@@ -4,8 +4,7 @@ export class Aircraft {
     this.type = type;
     this.team = team;
     this.position = { x, y };
-    this.direction = direction || { dx: 0, dy: team === "RED" ? 1 : -1 };
+    this.direction = direction;
     this.isAirborne = false;
-    this.isDestroyed = false;
   }
 }

@@ -1,6 +1,7 @@
 import { Board } from "../domain/entities/Board.js";
 import { Aircraft } from "../domain/entities/Aircraft.js";
 import { GameState } from "../domain/entities/GameState.js";
+import { PlacementRules } from "../domain/rules/PlacementRules.js";
 
 export class InitGame {
   build() {
@@ -17,10 +18,13 @@ export class InitGame {
       { x: 4, y: 22, type: "FIGHTER" },
     ];
 
-    const aircrafts = [
-      ...this._spawn("RED", redSlots),
-      ...this._spawn("BLUE", blueSlots),
-    ];
+    const aircrafts = [];
+    [...this._spawn("RED", redSlots), ...this._spawn("BLUE", blueSlots)].forEach(
+      (unit) => {
+        PlacementRules.validatePlacement(board, aircrafts, unit);
+        aircrafts.push(unit);
+      },
+    );
 
     return new GameState({ board, aircrafts });
   }
@@ -36,18 +40,18 @@ export class InitGame {
   }
 
   _spawn(team, slots) {
-    const p = team === "RED" ? "r" : "b";
+    const prefix = team === "RED" ? "r" : "b";
     const initialDirection =
       team === "RED" ? { dx: 0, dy: 1 } : { dx: 0, dy: -1 };
 
     return slots.map(
-      (c, i) =>
+      (slot, i) =>
         new Aircraft({
-          id: `${p}${i + 1}`,
-          type: c.type,
+          id: `${prefix}${i + 1}`,
+          type: slot.type,
           team,
-          x: c.x,
-          y: c.y,
+          x: slot.x,
+          y: slot.y,
           direction: { ...initialDirection },
         }),
     );

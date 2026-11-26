@@ -1,51 +1,92 @@
+import { MovementRules } from "../domain/rules/MovementRules.js";
+
 export class ScenePresenter {
   constructor(step = 2) {
     this.step = step;
     this.ALTITUDE = {
-      GROUND: 0.55, // Стоит на аэродроме
-      AIR: 1.5, // В воздухе
+      GROUND: 0.55,
+      AIR: 1.4,
+      SELECTED: 1.95,
+      MARKER: 0.08,
     };
   }
 
-  toWorld(x, y, w, h, isAirborne = false) {
+  toWorld(x, y, width, height, altitudeY) {
     return {
-      x: (x - (w - 1) / 2) * this.step,
-      y: isAirborne ? this.ALTITUDE.AIR : this.ALTITUDE.GROUND,
-      z: (y - (h - 1) / 2) * this.step,
+      x: (x - (width - 1) / 2) * this.step,
+      y: altitudeY,
+      z: (y - (height - 1) / 2) * this.step,
     };
   }
 
   present(gameState) {
     const { board } = gameState;
-    const aliveUnits = gameState.getAliveAircrafts();
+    const selectedUnit = gameState.getUnitById(gameState.selectedUnitId);
+    const rawMoves = selectedUnit
+      ? MovementRules.getValidMoves(gameState, selectedUnit)
+      : [];
+
     return {
-      turn: {
-        current: gameState.currentTurn,
-        canMoveFighter: !gameState.turnActions.FIGHTER,
-        canMoveBomber: !gameState.turnActions.BOMBER,
-        selectedUnitId: gameState.selectedUnitId,
-      },
       board: {
         width: board.width,
         height: board.height,
         step: this.step,
       },
-      units: aliveUnits.map((u) => ({
-        id: u.id,
-        type: u.type,
-        team: u.team,
-        isAirborne: u.isAirborne,
-        isSelected: u.id === gameState.selectedUnitId,
-        canAct: gameState.canUnitAct(u),
-        worldPos: this.toWorld(
-          u.position.x,
-          u.position.y,
+      units: gameState.aircrafts.map((u) => {
+        const isSelected = u.id === gameState.selectedUnitId;
+        const altitudeY = isSelected
+          ? this.ALTITUDE.SELECTED
+          : u.isAirborne
+            ? this.ALTITUDE.AIR
+            : this.ALTITUDE.GROUND;
+
+        return {
+          id: u.id,
+          type: u.type,
+          team: u.team,
+          worldPos: this.toWorld(
+            u.position.x,
+            u.position.y,
+            board.width,
+            board.height,
+            altitudeY,
+          ),
+          rotationY: Math.atan2(u.direction.dx, u.direction.dy),
+        };
+      }),
+      moveMarkers: rawMoves.map((move, index) => {
+        const isTurnInPlace =
+          selectedUnit &&
+          move.x === selectedUnit.position.x &&
+          move.y === selectedUnit.position.y;
+
+        const altitudeY = isTurnInPlace
+          ? this.ALTITUDE.SELECTED
+          : this.ALTITUDE.MARKER;
+        const basePos = this.toWorld(
+          move.x,
+          move.y,
           board.width,
           board.height,
-          u.isAirborne,
-        ),
-        rotationY: Math.atan2(u.direction.dx, u.direction.dy),
-      })),
+          altitudeY,
+        );
+        const offset = isTurnInPlace ? 0.85 : 0;
+
+        return {
+          index,
+          move,
+          isTurnInPlace,
+          worldPos: {
+            x: basePos.x + move.direction.dx * offset,
+            y: basePos.y,
+            z: basePos.z + move.direction.dy * offset,
+          },
+          rotationY: Math.atan2(move.direction.dx, move.direction.dy),
+        };
+      }),
     };
   }
 }
+
+
+
