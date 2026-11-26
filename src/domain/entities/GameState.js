@@ -5,6 +5,8 @@ export class GameState {
     this.currentTurn = currentTurn;
     this.movedTypes = new Set();
     this.selectedUnitId = null;
+    this.winner = null;
+    this.winReason = null;
   }
 
   getUnitById(id) {
@@ -24,6 +26,7 @@ export class GameState {
 
   canUnitAct(unit) {
     return (
+      !this.winner &&
       Boolean(unit) &&
       unit.team === this.currentTurn &&
       !this.movedTypes.has(unit.type)
@@ -31,6 +34,8 @@ export class GameState {
   }
 
   selectUnit(unitId) {
+    if (this.winner) return false;
+
     if (this.selectedUnitId === unitId) {
       this.selectedUnitId = null;
       return true;
@@ -48,6 +53,12 @@ export class GameState {
     unit.direction = { ...direction };
     unit.isAirborne = isAirborne;
     this.movedTypes.add(unit.type);
+    this.selectedUnitId = null;
+  }
+
+  setWinner(team, reason) {
+    this.winner = team;
+    this.winReason = reason;
     this.selectedUnitId = null;
   }
 

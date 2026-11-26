@@ -20,7 +20,20 @@ export class TurnHud {
     document.body.appendChild(this.el);
   }
 
-  sync({ current, canMoveFighter, canMoveBomber }) {
+  sync({ current, canMoveFighter, canMoveBomber, winner, winReason }) {
+    if (winner) {
+      const isRedWin = winner === "RED";
+      const side = isRedWin ? "Красные" : "Синие";
+      const reasonText =
+        winReason === "HQ_DESTROYED"
+          ? "Штаб уничтожен!"
+          : "Авиация противника разгромлена!";
+
+      this.el.textContent = `Победа: ${side} (${reasonText})`;
+      this.el.style.borderLeftColor = isRedWin ? "#ff4d4d" : "#4da6ff";
+      return;
+    }
+
     const isRed = current === "RED";
     const side = isRed ? "Красные" : "Синие";
 
@@ -32,8 +45,10 @@ export class TurnHud {
     this.el.style.borderLeftColor = isRed ? "#ff4d4d" : "#4da6ff";
   }
 
+
   dispose() {
     this.el.remove();
   }
 }
+
 
