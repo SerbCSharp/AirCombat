@@ -44,9 +44,7 @@ export class ScenePresenter {
         type: s.type,
         team: s.team,
         worldPos: this.toWorld(s.x, s.y, board.width, board.height, 0.03),
-        rotationY: s.direction
-          ? Math.atan2(s.direction.dx, s.direction.dy)
-          : 0,
+        rotationY: s.direction ? Math.atan2(s.direction.dx, s.direction.dy) : 0,
       })),
       units: gameState.aircrafts.map((u) => {
         const isSelected = u.id === gameState.selectedUnitId;
@@ -60,6 +58,7 @@ export class ScenePresenter {
           id: u.id,
           type: u.type,
           team: u.team,
+          isSelected,
           worldPos: this.toWorld(
             u.position.x,
             u.position.y,
