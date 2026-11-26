@@ -7,7 +7,7 @@ export class MoveAircraft {
 
   execute(move) {
     const unit = this.gameState.getUnitById(this.gameState.selectedUnitId);
-    if (!unit || !move) return false;
+    if (!this.gameState.canUnitAct(unit) || !move) return false;
 
     const validMoves = MovementRules.getValidMoves(this.gameState, unit);
     const matchedMove = validMoves.find(
@@ -20,7 +20,25 @@ export class MoveAircraft {
 
     if (!matchedMove) return false;
 
+    if (matchedMove.targetId) {
+      this.gameState.removeUnit(matchedMove.targetId);
+    }
+
     this.gameState.applyMove(unit, matchedMove);
+
+    if (!this._hasMoreActionsInTurn()) {
+      this.gameState.switchTurn();
+    }
+
     return true;
   }
+
+  _hasMoreActionsInTurn() {
+    return this.gameState.aircrafts.some(
+      (u) =>
+        this.gameState.canUnitAct(u) &&
+        MovementRules.getValidMoves(this.gameState, u).length > 0,
+    );
+  }
 }
+

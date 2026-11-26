@@ -27,6 +27,11 @@ export class ScenePresenter {
       : [];
 
     return {
+      turn: {
+        current: gameState.currentTurn,
+        canMoveFighter: !gameState.movedTypes.has("FIGHTER"),
+        canMoveBomber: !gameState.movedTypes.has("BOMBER"),
+      },
       board: {
         width: board.width,
         height: board.height,
@@ -59,10 +64,13 @@ export class ScenePresenter {
           selectedUnit &&
           move.x === selectedUnit.position.x &&
           move.y === selectedUnit.position.y;
+        const isAttack = Boolean(move.targetId);
 
         const altitudeY = isTurnInPlace
           ? this.ALTITUDE.SELECTED
-          : this.ALTITUDE.MARKER;
+          : isAttack
+            ? this.ALTITUDE.AIR
+            : this.ALTITUDE.MARKER;
         const basePos = this.toWorld(
           move.x,
           move.y,
@@ -76,6 +84,7 @@ export class ScenePresenter {
           index,
           move,
           isTurnInPlace,
+          isAttack,
           worldPos: {
             x: basePos.x + move.direction.dx * offset,
             y: basePos.y,
@@ -87,6 +96,3 @@ export class ScenePresenter {
     };
   }
 }
-
-
-

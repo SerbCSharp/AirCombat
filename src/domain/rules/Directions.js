@@ -10,7 +10,6 @@ export class Directions {
     return ORTHO_DIRECTIONS.findIndex((d) => d.dx === dx && d.dy === dy);
   }
 
-  // Поворот на steps прямых углов (+1 = 90° вправо, -1 = 90° влево, 2 = 180°)
   static rotate90(direction, steps) {
     const idx = this.getIndex(direction);
     if (idx === -1) return { ...direction };
@@ -18,4 +17,13 @@ export class Directions {
     const nextIdx = (((idx + steps) % len) + len) % len;
     return { ...ORTHO_DIRECTIONS[nextIdx] };
   }
+
+  // Ракурс атаки относительно курса цели: FRONT (лоб), REAR (хвост), SIDE (бок)
+  static getAttackAspect(attackDir, targetDir) {
+    const dot = attackDir.dx * targetDir.dx + attackDir.dy * targetDir.dy;
+    if (dot === -1) return "FRONT";
+    if (dot === 1) return "REAR";
+    return "SIDE";
+  }
 }
+

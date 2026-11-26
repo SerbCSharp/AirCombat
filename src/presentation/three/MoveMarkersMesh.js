@@ -14,6 +14,13 @@ export class MoveMarkersMesh {
       side: THREE.DoubleSide,
     });
 
+    this.attackMaterial = new THREE.MeshBasicMaterial({
+      color: 0xff1744,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
+    });
+
     this.turnMaterial = new THREE.MeshBasicMaterial({
       color: 0xffd54f,
       transparent: true,
@@ -27,7 +34,7 @@ export class MoveMarkersMesh {
     markers.forEach((m) => {
       const markerObj = m.isTurnInPlace
         ? this._createTurnArrow()
-        : this._createCellMarker();
+        : this._createCellMarker(m.isAttack);
 
       markerObj.position.set(m.worldPos.x, m.worldPos.y, m.worldPos.z);
       markerObj.rotation.y = m.rotationY;
@@ -39,11 +46,12 @@ export class MoveMarkersMesh {
     return this.group;
   }
 
-  _createCellMarker() {
+  _createCellMarker(isAttack) {
     const container = new THREE.Group();
+    const mat = isAttack ? this.attackMaterial : this.moveMaterial;
 
-    const ring = new THREE.Mesh(this.ringGeo, this.moveMaterial);
-    const arrow = new THREE.Mesh(this.arrowGeo, this.moveMaterial);
+    const ring = new THREE.Mesh(this.ringGeo, mat);
+    const arrow = new THREE.Mesh(this.arrowGeo, mat);
     arrow.position.z = 0.25;
 
     container.add(ring, arrow);
@@ -58,6 +66,7 @@ export class MoveMarkersMesh {
     this.ringGeo.dispose();
     this.arrowGeo.dispose();
     this.moveMaterial.dispose();
+    this.attackMaterial.dispose();
     this.turnMaterial.dispose();
     this.group.clear();
   }

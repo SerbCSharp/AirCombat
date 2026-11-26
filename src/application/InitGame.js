@@ -26,7 +26,8 @@ export class InitGame {
       },
     );
 
-    return new GameState({ board, aircrafts });
+    const firstTurn = Math.random() < 0.5 ? "RED" : "BLUE";
+    return new GameState({ board, aircrafts, currentTurn: firstTurn });
   }
 
   _rect(x1, x2, y1, y2, type) {
@@ -57,3 +58,4 @@ export class InitGame {
     );
   }
 }
+

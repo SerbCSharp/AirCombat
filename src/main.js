@@ -6,6 +6,7 @@ import { BoardMesh } from "./presentation/three/BoardMesh.js";
 import { AircraftMesh } from "./presentation/three/AircraftMesh.js";
 import { MoveMarkersMesh } from "./presentation/three/MoveMarkersMesh.js";
 import { RaycasterInput } from "./presentation/three/RaycasterInput.js";
+import { TurnHud } from "./presentation/ui/TurnHud.js";
 
 const gameState = new InitGame().build();
 const moveAircraft = new MoveAircraft(gameState);
@@ -15,9 +16,11 @@ const app = new Scene();
 const boardMesh = new BoardMesh();
 const aircraftMesh = new AircraftMesh();
 const moveMarkersMesh = new MoveMarkersMesh();
+const turnHud = new TurnHud();
 
 function render() {
   const view = presenter.present(gameState);
+  turnHud.sync(view.turn);
   aircraftMesh.sync(view.units);
   moveMarkersMesh.sync(view.moveMarkers);
   return view;
@@ -48,4 +51,5 @@ new RaycasterInput({
 app.runAnimation((dt) => {
   aircraftMesh.update(dt);
 });
+
 

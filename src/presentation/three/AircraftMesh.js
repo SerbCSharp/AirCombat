@@ -23,6 +23,14 @@ export class AircraftMesh {
   }
 
   sync(units) {
+    const activeIds = new Set(units.map((u) => u.id));
+    for (const [id, mesh] of this.meshes.entries()) {
+      if (!activeIds.has(id)) {
+        this.group.remove(mesh);
+        this.meshes.delete(id);
+      }
+    }
+
     units.forEach((u) => {
       let mesh = this.meshes.get(u.id);
       if (!mesh) {
@@ -48,9 +56,21 @@ export class AircraftMesh {
       const { targetPos, targetRotY } = mesh.userData;
       if (!targetPos) continue;
 
-      mesh.position.x = THREE.MathUtils.lerp(mesh.position.x, targetPos.x, alpha);
-      mesh.position.y = THREE.MathUtils.lerp(mesh.position.y, targetPos.y, alpha);
-      mesh.position.z = THREE.MathUtils.lerp(mesh.position.z, targetPos.z, alpha);
+      mesh.position.x = THREE.MathUtils.lerp(
+        mesh.position.x,
+        targetPos.x,
+        alpha,
+      );
+      mesh.position.y = THREE.MathUtils.lerp(
+        mesh.position.y,
+        targetPos.y,
+        alpha,
+      );
+      mesh.position.z = THREE.MathUtils.lerp(
+        mesh.position.z,
+        targetPos.z,
+        alpha,
+      );
 
       // Кратчайший угол разворота (без кручения через 360°)
       const deltaAngle = Math.atan2(
@@ -77,4 +97,3 @@ export class AircraftMesh {
     this.meshes.clear();
   }
 }
-
