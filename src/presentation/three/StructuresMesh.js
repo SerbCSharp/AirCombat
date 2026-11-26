@@ -6,7 +6,9 @@ export class StructuresMesh {
 
     this.hqGeo = new THREE.PlaneGeometry(1.5, 1.5).rotateX(-Math.PI / 2);
     this.samGeo = new THREE.RingGeometry(0.45, 0.78, 24).rotateX(-Math.PI / 2);
-this.aaArcGeo = new THREE.RingGeometry(0.45, 0.78, 16, 1, 0, Math.PI).rotateX(-Math.PI / 2);
+    this.aaArcGeo = new THREE.RingGeometry(0.45, 0.78, 16, 1, 0, Math.PI)
+      .rotateX(-Math.PI / 2)
+      .rotateY(Math.PI);
     this.arrowGeo = new THREE.ConeGeometry(0.22, 0.45, 3).rotateX(Math.PI / 2);
 
     this.materials = {
