@@ -32,7 +32,9 @@ export class MoveAircraft {
       const structure = this.gameState.board.getStructureAt(cell.x, cell.y);
       if (!structure) continue;
 
-      if (AirDefenseRules.isShotDownByAA(unit, matchedMove.direction, structure)) {
+      if (
+        AirDefenseRules.isShotDownByAA(unit, matchedMove.direction, structure)
+      ) {
         this.gameState.removeUnit(unit.id);
         break;
       }
@@ -68,4 +70,3 @@ export class MoveAircraft {
     );
   }
 }
-
