@@ -66,6 +66,26 @@ export class GameState {
     this.currentTurn = this.currentTurn === "RED" ? "BLUE" : "RED";
     this.movedTypes.clear();
   }
+
+    clone() {
+    const copy = new GameState({
+      board: this.board,
+      aircrafts: this.aircrafts.map((u) => ({
+        id: u.id,
+        type: u.type,
+        team: u.team,
+        position: { x: u.position.x, y: u.position.y },
+        direction: { dx: u.direction.dx, dy: u.direction.dy },
+        isAirborne: u.isAirborne,
+      })),
+      currentTurn: this.currentTurn,
+    });
+    copy.movedTypes = new Set(this.movedTypes);
+    copy.selectedUnitId = this.selectedUnitId;
+    copy.winner = this.winner;
+    copy.winReason = this.winReason;
+    return copy;
+  }
 }
 
 

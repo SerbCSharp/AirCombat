@@ -51,6 +51,10 @@ export class MoveAircraft {
 
     if (!this._hasMoreActionsInTurn()) {
       this.gameState.switchTurn();
+      // Если у нового игрока тоже нет ни одного доступного хода — возвращаем ход обратно
+      if (!this._hasMoreActionsInTurn()) {
+        this.gameState.switchTurn();
+      }
     }
 
     return true;
